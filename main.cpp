@@ -120,6 +120,7 @@ int main()
     registerHotkeys();
 
     printf("\n====================================================================================\n");
+    printf("\nForked by dkerkez\n\n");
     printf("Welcome to iRon! This app provides a few simple overlays for iRacing.\n\n");
     printf("NOTE: Most overlays are only active when iRacing is running and the car is on track.\n\n");
     printf("Current hotkeys:\n");

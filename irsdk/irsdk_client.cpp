@@ -287,14 +287,16 @@ float irsdkClient::getVarFloat(int idx, int entry)
 			}
 			else
 			{
+				return 0.0f;
 				// invalid offset
-				assert(false);
+				// assert(false);
 			}
 		}
 		else
 		{
+			return 0.0f;
 			//invalid variable index
-			assert(false);
+			// assert(false);
 		}
 	}
 
