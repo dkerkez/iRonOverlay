@@ -13,6 +13,7 @@ The project's code base aims to be small, easy to modify, and free of external d
   - [*Relative*](#relative)
   - [*DDU*](#ddu)
   - [*Inputs*](#inputs)
+  - [*Delta Optimal*](#delta-optimal)
   - [*Standings*](#standings)
   - [*Cover*](#cover)
 - [Installing & Running](#installing--running)
@@ -51,6 +52,14 @@ The fuel calculator shows the estimated remaining laps, remaining amount of fuel
 Shows throttle/brake/steering in a moving graph. I find it useful to practice consistent braking.
 
 ![inputs](https://github.com/lespalt/iRon/blob/main/inputs.png?raw=true)
+
+### *Delta Optimal*
+
+Shows only the current session optimal lap delta (`LapDeltaToSessionOptimalLap`) as a large value. Color indicates whether you are up or down versus optimal:
+
+- green when negative
+- white when zero
+- red when positive
 
 ### *Standings*
 

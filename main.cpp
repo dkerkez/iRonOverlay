@@ -39,6 +39,7 @@ SOFTWARE.
 #include "OverlayCover.h"
 #include "OverlayRelative.h"
 #include "OverlayInputs.h"
+#include "OverlayDelta.h"
 #include "OverlayStandings.h"
 #include "OverlayDebug.h"
 #include "OverlayDDU.h"
@@ -49,6 +50,7 @@ enum class Hotkey
     Standings,
     DDU,
     Inputs,
+    Delta,
     Relative,
     Cover
 };
@@ -59,6 +61,7 @@ static void registerHotkeys()
     UnregisterHotKey( NULL, (int)Hotkey::Standings );
     UnregisterHotKey( NULL, (int)Hotkey::DDU );
     UnregisterHotKey( NULL, (int)Hotkey::Inputs );
+    UnregisterHotKey( NULL, (int)Hotkey::Delta );
     UnregisterHotKey( NULL, (int)Hotkey::Relative );
     UnregisterHotKey( NULL, (int)Hotkey::Cover );
 
@@ -75,6 +78,9 @@ static void registerHotkeys()
 
     if( parseHotkey( g_cfg.getString("OverlayInputs","toggle_hotkey","ctrl-2"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Inputs, mod, vk );
+
+    if( parseHotkey( g_cfg.getString("OverlayDelta","toggle_hotkey","ctrl-5"),&mod,&vk) )
+        RegisterHotKey( NULL, (int)Hotkey::Delta, mod, vk );
 
     if( parseHotkey( g_cfg.getString("OverlayRelative","toggle_hotkey","ctrl-3"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Relative, mod, vk );
@@ -120,7 +126,7 @@ int main()
     registerHotkeys();
 
     printf("\n====================================================================================\n");
-    printf("\nForked by dkerkez\n\n");
+    printf("\nForked by dkerkez v2 \n\n");
     printf("Welcome to iRon! This app provides a few simple overlays for iRacing.\n\n");
     printf("NOTE: Most overlays are only active when iRacing is running and the car is on track.\n\n");
     printf("Current hotkeys:\n");
@@ -130,6 +136,7 @@ int main()
     printf("    Toggle inputs overlay:        %s\n", g_cfg.getString("OverlayInputs","toggle_hotkey","").c_str() );
     printf("    Toggle relative overlay:      %s\n", g_cfg.getString("OverlayRelative","toggle_hotkey","").c_str() );
     printf("    Toggle cover overlay:         %s\n", g_cfg.getString("OverlayCover","toggle_hotkey","").c_str() );
+    printf("    Toggle delta overlay:         %s\n", g_cfg.getString("OverlayDelta","toggle_hotkey","").c_str() );
     printf("\niRon will generate a file called \'config.json\' in its current directory. This file\n"\
            "stores your settings. You can edit the file at any time, even while iRon is running,\n"\
            "to customize your overlays and hotkeys.\n\n");
@@ -143,6 +150,7 @@ int main()
     overlays.push_back( new OverlayCover() );
     overlays.push_back( new OverlayRelative() );
     overlays.push_back( new OverlayInputs() );
+    overlays.push_back( new OverlayDelta() );
     overlays.push_back( new OverlayStandings() );
     overlays.push_back( new OverlayDDU() );
 #ifdef _DEBUG
@@ -239,6 +247,9 @@ int main()
                         break;
                     case (int)Hotkey::Inputs:
                         g_cfg.setBool( "OverlayInputs", "enabled", !g_cfg.getBool("OverlayInputs","enabled",true) );
+                        break;
+                    case (int)Hotkey::Delta:
+                        g_cfg.setBool( "OverlayDelta", "enabled", !g_cfg.getBool("OverlayDelta","enabled",true) );
                         break;
                     case (int)Hotkey::Relative:
                         g_cfg.setBool( "OverlayRelative", "enabled", !g_cfg.getBool("OverlayRelative","enabled",true) );
