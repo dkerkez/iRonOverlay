@@ -397,6 +397,8 @@ ConnectionStatus ir_tick()
         sprintf( path, "WeekendInfo:SubSessionID:" );
         parseYamlInt( sessionYaml, path, &ir_session.subsessionId );
 
+        parseYamlStr( sessionYaml, "WeekendInfo:TrackName:", ir_session.trackName );
+
         sprintf( path, "WeekendInfo:WeekendOptions:IsFixedSetup:" );
         parseYamlInt( sessionYaml, path, &ir_session.isFixedSetup );
 
@@ -413,6 +415,20 @@ ConnectionStatus ir_tick()
 
         // Driver/car info
         parseYamlInt( sessionYaml, "DriverInfo:DriverCarIdx:", &ir_session.driverCarIdx );
+        if( ir_session.driverCarIdx >= 0 && ir_session.driverCarIdx < IR_MAX_CARS )
+        {
+            sprintf( path, "DriverInfo:Drivers:CarIdx:{%d}CarScreenName:", ir_session.driverCarIdx );
+            if( !parseYamlStr( sessionYaml, path, ir_session.carName ) )
+            {
+                sprintf( path, "DriverInfo:Drivers:CarIdx:{%d}CarPath:", ir_session.driverCarIdx );
+                parseYamlStr( sessionYaml, path, ir_session.carName );
+            }
+        }
+        else
+        {
+            ir_session.carName.clear();
+        }
+
         parseYamlFloat( sessionYaml, "DriverInfo:DriverCarFuelMaxLtr:", &ir_session.fuelMaxLtr );
         parseYamlFloat( sessionYaml, "DriverInfo:DriverCarIdleRPM:", &ir_session.rpmIdle );
         parseYamlFloat( sessionYaml, "DriverInfo:DriverCarRedLine:", &ir_session.rpmRedline );

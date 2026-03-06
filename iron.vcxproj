@@ -155,6 +155,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Overlay.cpp" />
     <ClCompile Include="OverlayDebug.cpp" />
+    <ClCompile Include="TelemetryLogger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
@@ -171,6 +172,7 @@
     <ClInclude Include="OverlayRelative.h" />
     <ClInclude Include="OverlayStandings.h" />
     <ClInclude Include="picojson.h" />
+    <ClInclude Include="TelemetryLogger.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>

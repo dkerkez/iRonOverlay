@@ -81,24 +81,34 @@ protected:
         const float zeroEps = g_cfg.getFloat(m_name, "zero_epsilon", 0.0005f);
 
         const float4 negativeCol = g_cfg.getFloat4(m_name, "negative_col", float4(0.20f, 0.90f, 0.20f, 1.0f));
+        const float4 lightNegativeCol = g_cfg.getFloat4(m_name, "light_negative_col", float4(0.40f, 0.95f, 0.40f, 1.0f));
         const float4 zeroCol = g_cfg.getFloat4(m_name, "zero_col", float4(1.0f, 1.0f, 1.0f, 1.0f));
+        const float4 lightPositiveCol = g_cfg.getFloat4(m_name, "light_positive_col", float4(1.0f, 0.50f, 0.30f, 1.0f));
         const float4 positiveCol = g_cfg.getFloat4(m_name, "positive_col", float4(0.95f, 0.20f, 0.20f, 1.0f));
         const float4 invalidCol = g_cfg.getFloat4(m_name, "invalid_col", float4(1.0f, 1.0f, 1.0f, 0.50f));
 
         float4 textCol = invalidCol;
         if (isValid)
         {
-            if (fabsf(delta) <= zeroEps)
+            const float absDelta = fabsf(delta);
+
+            if (absDelta <= 0.01f)
+            {
                 textCol = zeroCol;
-            else if (delta < 0)
-                textCol = negativeCol;
+            }
+            else if (absDelta <= 0.02f)
+            {
+                textCol = delta < 0 ? lightNegativeCol : lightPositiveCol;
+            }
             else
-                textCol = positiveCol;
+            {
+                textCol = delta < 0 ? negativeCol : positiveCol;
+            }
         }
 
-         
+
         wchar_t value[64] = {};
-        
+
         if (!isValid)
             swprintf(value, _countof(value), L"-.--");
         else if (fabsf(delta) <= zeroEps)

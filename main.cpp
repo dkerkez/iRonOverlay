@@ -43,6 +43,7 @@ SOFTWARE.
 #include "OverlayStandings.h"
 #include "OverlayDebug.h"
 #include "OverlayDDU.h"
+#include "TelemetryLogger.h"
 
 enum class Hotkey
 {
@@ -52,7 +53,8 @@ enum class Hotkey
     Inputs,
     Delta,
     Relative,
-    Cover
+    Cover,
+    Telemetry
 };
 
 static void registerHotkeys()
@@ -87,6 +89,9 @@ static void registerHotkeys()
 
     if( parseHotkey( g_cfg.getString("OverlayCover","toggle_hotkey","ctrl-4"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Cover, mod, vk );
+
+    if( parseHotkey( g_cfg.getString("TelemetryLogger","toggle_hotkey","ctrl-6"),&mod,&vk) )
+        RegisterHotKey( NULL, (int)Hotkey::Telemetry, mod, vk );
 }
 
 static void handleConfigChange( std::vector<Overlay*> overlays, ConnectionStatus status )
@@ -126,7 +131,7 @@ int main()
     registerHotkeys();
 
     printf("\n====================================================================================\n");
-    printf("\nForked by dkerkez v2 \n\n");
+    printf("\nForked by dkerkez v3 \n\n");
     printf("Welcome to iRon! This app provides a few simple overlays for iRacing.\n\n");
     printf("NOTE: Most overlays are only active when iRacing is running and the car is on track.\n\n");
     printf("Current hotkeys:\n");
@@ -137,6 +142,7 @@ int main()
     printf("    Toggle relative overlay:      %s\n", g_cfg.getString("OverlayRelative","toggle_hotkey","").c_str() );
     printf("    Toggle cover overlay:         %s\n", g_cfg.getString("OverlayCover","toggle_hotkey","").c_str() );
     printf("    Toggle delta overlay:         %s\n", g_cfg.getString("OverlayDelta","toggle_hotkey","").c_str() );
+    printf("    Toggle telemetry logging:     %s\n", g_cfg.getString("TelemetryLogger","toggle_hotkey","").c_str() );
     printf("\niRon will generate a file called \'config.json\' in its current directory. This file\n"\
            "stores your settings. You can edit the file at any time, even while iRon is running,\n"\
            "to customize your overlays and hotkeys.\n\n");
@@ -160,6 +166,10 @@ int main()
     ConnectionStatus  status   = ConnectionStatus::UNKNOWN;
     bool              uiEdit   = false;
     unsigned          frameCnt = 0;
+    TelemetryLogger   telemetryLogger;
+
+    bool telemetryEnabled = g_cfg.getBool("TelemetryLogger", "enabled", true);
+    printf("Telemetry logging %s\n", telemetryEnabled ? "enabled" : "disabled");
 
     while( true )
     {
@@ -184,6 +194,16 @@ int main()
             for( Overlay* o : overlays )
                 o->sessionChanged();
         }
+
+        // Check for telemetry logging status change
+        bool currentTelemetryEnabled = g_cfg.getBool("TelemetryLogger", "enabled", true);
+        if( currentTelemetryEnabled != telemetryEnabled )
+        {
+            telemetryEnabled = currentTelemetryEnabled;
+            printf("Telemetry logging %s\n", telemetryEnabled ? "enabled" : "disabled");
+        }
+
+        telemetryLogger.update( status );
 
         dbg( "connection status: %s, session type: %s, session state: %d, pace mode: %d, on track: %d, flags: 0x%X", ConnectionStatusStr[(int)status], SessionTypeStr[(int)ir_session.sessionType], ir_SessionState.getInt(), ir_PaceMode.getInt(), (int)ir_IsOnTrackCar.getBool(), ir_SessionFlags.getInt() );
 
@@ -257,8 +277,11 @@ int main()
                     case (int)Hotkey::Cover:
                         g_cfg.setBool( "OverlayCover", "enabled", !g_cfg.getBool("OverlayCover","enabled",true) );
                         break;
+                    case (int)Hotkey::Telemetry:
+                        g_cfg.setBool( "TelemetryLogger", "enabled", !g_cfg.getBool("TelemetryLogger","enabled",true) );
+                        break;
                     }
-                    
+
                     g_cfg.save();
                     handleConfigChange( overlays, status );
                 }

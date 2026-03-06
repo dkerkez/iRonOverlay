@@ -78,6 +78,8 @@ struct Car
 struct Session
 {
     SessionType     sessionType = SessionType::UNKNOWN;
+    std::string     trackName;
+    std::string     carName;
     Car             cars[IR_MAX_CARS];
     int             driverCarIdx = -1;
     int             sof = 0;
