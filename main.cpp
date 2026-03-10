@@ -151,6 +151,8 @@ int main()
     printf("\nHappy Racing!\n");
     printf("====================================================================================\n\n");
 
+    
+
     // Create overlays
     std::vector<Overlay*> overlays;
     overlays.push_back( new OverlayCover() );
@@ -171,10 +173,18 @@ int main()
     bool telemetryEnabled = g_cfg.getBool("TelemetryLogger", "enabled", true);
     printf("Telemetry logging %s\n", telemetryEnabled ? "enabled" : "disabled");
 
+    bool variablesPrinted = false;
+
     while( true )
     {
         ConnectionStatus prevStatus       = status;
         SessionType      prevSessionType  = ir_session.sessionType;
+
+
+      /*  if (!variablesPrinted && irsdk_isConnected()) {
+            variablesPrinted = true;
+            ir_printVariables();
+        }*/
 
         // Refresh connection and session info
         status = ir_tick();

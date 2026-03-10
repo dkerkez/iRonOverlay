@@ -553,7 +553,7 @@ class OverlayDDU : public Overlay
                 const float rr = 100.0f * std::min(std::min( ir_RRwearL.getFloat(), ir_RRwearM.getFloat() ), ir_RRwearR.getFloat() );
 
                 // Left
-                if( ir_dpLTireChange.getFloat() )
+                if( ir_dpLFTireChange.getFloat() || ir_dpLRTireChange.getFloat() )
                     m_brush->SetColor( serviceCol );
                 else
                     m_brush->SetColor( textCol );
@@ -563,7 +563,7 @@ class OverlayDDU : public Overlay
                 m_text.render( m_renderTarget.Get(), s, m_textFormatSmall.Get(), m_boxTires.x0+20, m_boxTires.x0+m_boxTires.w/2, m_boxTires.y0+m_boxTires.h*2.0f/3.0f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER );
 
                 // Right
-                if( ir_dpRTireChange.getFloat() )
+                if( ir_dpRFTireChange.getFloat() || ir_dpRRTireChange.getFloat() )
                     m_brush->SetColor( serviceCol );
                 else
                     m_brush->SetColor( textCol );
@@ -633,9 +633,13 @@ class OverlayDDU : public Overlay
 
             // Brake bias
             {
+                // Note: Brake bias variable removed from SDK
+                // Comment out or use alternative approach if brake bias data is available
+                /*
                 const float bias = ir_dcBrakeBias.getFloat();
                 swprintf( s, _countof(s), L"%+3.1f", bias );
                 m_text.render( m_renderTarget.Get(), s, m_textFormat.Get(), m_boxBias.x0, m_boxBias.x1, m_boxBias.y0+m_boxBias.h*0.5f, m_brush.Get(), DWRITE_TEXT_ALIGNMENT_CENTER );
+                */
             }
 
             // Oil temp

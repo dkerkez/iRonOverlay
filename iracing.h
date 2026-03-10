@@ -28,6 +28,7 @@ SOFTWARE.
 #include "irsdk/irsdk_client.h"
 #include "irsdk/yaml_parser.h"
 #include <string>
+#include <vector>
 #include "util.h"
 
 #define IR_MAX_CARS 64
@@ -49,6 +50,12 @@ enum class SessionType
     RACE
 };
 static const char* const SessionTypeStr[] = {"UNKNOWN","PRACTICE","QUALIFY","RACE"};
+
+struct Sector
+{
+    int     sectorNum = 0;
+    float   sectorStartPct = 0.0f;
+};
 
 struct Car
 {    
@@ -94,6 +101,7 @@ struct Session
     float           rpmSLShift = 0;
     float           rpmSLLast = 0;
     float           rpmSLBlink = 0;
+    std::vector<Sector> sectors;
 };
 
 extern irsdkCVar ir_SessionTime;    // double[1] Seconds since session start (s)
@@ -224,8 +232,13 @@ extern irsdkCVar ir_AirDensity;    // float[1] Density of air at start/finish li
 extern irsdkCVar ir_AirPressure;    // float[1] Pressure of air at start/finish line (Hg)
 extern irsdkCVar ir_WindVel;    // float[1] Wind velocity at start/finish line (m/s)
 extern irsdkCVar ir_WindDir;    // float[1] Wind direction at start/finish line (rad)
-extern irsdkCVar ir_RelativeHumidity;    // float[1] Relative Humidity (%)
-extern irsdkCVar ir_FogLevel;    // float[1] Fog level (%)
+extern irsdkCVar ir_RelativeHumidity;    // float[1] Relative Humidity at start/finish line (%)
+extern irsdkCVar ir_FogLevel;    // float[1] Fog level at start/finish line (%)
+extern irsdkCVar ir_Precipitation;    // float[1] Precipitation at start/finish line (%)
+extern irsdkCVar ir_SolarAltitude;    // float[1] Sun angle above horizon in radians (rad)
+extern irsdkCVar ir_SolarAzimuth;    // float[1] Sun angle clockwise from north in radians (rad)
+extern irsdkCVar ir_WeatherDeclaredWet;    // bool[1] The steward says rain tires can be used ()
+extern irsdkCVar ir_SteeringFFBEnabled;    // bool[1] Force feedback is enabled ()
 extern irsdkCVar ir_DCLapStatus;    // int[1] Status of driver change lap requirements ()
 extern irsdkCVar ir_DCDriversSoFar;    // int[1] Number of team drivers who have run a stint ()
 extern irsdkCVar ir_OkToReloadTextures;    // bool[1] True if it is ok to reload car textures at this time ()
@@ -287,7 +300,7 @@ extern irsdkCVar ir_PitSvLFP;    // float[1] Pit service left front tire pressur
 extern irsdkCVar ir_PitSvRFP;    // float[1] Pit service right front tire pressure (kPa)
 extern irsdkCVar ir_PitSvLRP;    // float[1] Pit service left rear tire pressure (kPa)
 extern irsdkCVar ir_PitSvRRP;    // float[1] Pit service right rear tire pressure (kPa)
-extern irsdkCVar ir_PitSvFuel;    // float[1] Pit service fuel add amount (l)
+extern irsdkCVar ir_PitSvFuel;    // float[1] Pit service fuel add amount (l or kWh)
 extern irsdkCVar ir_PitSvTireCompound;    // int[1] Pit service pending tire compound ()
 extern irsdkCVar ir_CarIdxP2P_Status;    // bool[64] Push2Pass active or not ()
 extern irsdkCVar ir_CarIdxP2P_Count;    // int[64] Push2Pass count of usage (or remaining in Race) ()
@@ -320,29 +333,37 @@ extern irsdkCVar ir_VertAccel;    // float[1] Vertical acceleration (including g
 extern irsdkCVar ir_LatAccel;    // float[1] Lateral acceleration (including gravity) (m/s^2)
 extern irsdkCVar ir_LongAccel;    // float[1] Longitudinal acceleration (including gravity) (m/s^2)
 extern irsdkCVar ir_dcStarter;    // bool[1] In car trigger car starter ()
-extern irsdkCVar ir_dpRTireChange;    // float[1] Pitstop right tire change request ()
-extern irsdkCVar ir_dpLTireChange;    // float[1] Pitstop left tire change request ()
+extern irsdkCVar ir_dcPitSpeedLimiterToggle;    // bool[1] Track if pit speed limiter system is enabled ()
+extern irsdkCVar ir_dpRFTireChange;    // float[1] Pitstop rf tire change request ()
+extern irsdkCVar ir_dpLFTireChange;    // float[1] Pitstop lf tire change request ()
+extern irsdkCVar ir_dpRRTireChange;    // float[1] Pitstop rr tire change request ()
+extern irsdkCVar ir_dpLRTireChange;    // float[1] Pitstop lr tire change request ()
 extern irsdkCVar ir_dpFuelFill;    // float[1] Pitstop fuel fill flag ()
+extern irsdkCVar ir_dpFuelAutoFillEnabled;    // float[1] Pitstop auto fill fuel system enabled ()
+extern irsdkCVar ir_dpFuelAutoFillActive;    // float[1] Pitstop auto fill fuel next stop flag ()
 extern irsdkCVar ir_dpWindshieldTearoff;    // float[1] Pitstop windshield tearoff ()
 extern irsdkCVar ir_dpFuelAddKg;    // float[1] Pitstop fuel add ammount (kg)
 extern irsdkCVar ir_dpFastRepair;    // float[1] Pitstop fast repair set ()
-extern irsdkCVar ir_dcBrakeBias;    // float[1] In car brake bias adjustment ()
 extern irsdkCVar ir_dpLFTireColdPress;    // float[1] Pitstop lf tire cold pressure adjustment (Pa)
 extern irsdkCVar ir_dpRFTireColdPress;    // float[1] Pitstop rf cold tire pressure adjustment (Pa)
 extern irsdkCVar ir_dpLRTireColdPress;    // float[1] Pitstop lr tire cold pressure adjustment (Pa)
 extern irsdkCVar ir_dpRRTireColdPress;    // float[1] Pitstop rr cold tire pressure adjustment (Pa)
-extern irsdkCVar ir_dpWeightJackerLeft;    // float[1] Pitstop left wedge/weight jacker adjustment ()
-extern irsdkCVar ir_dpWeightJackerRight;    // float[1] Pitstop right wedge/weight jacker adjustment ()
+extern irsdkCVar ir_dcToggleWindshieldWipers;    // bool[1] In car turn wipers on or off ()
+extern irsdkCVar ir_dcTriggerWindshieldWipers;    // bool[1] In car momentarily turn on wipers ()
+extern irsdkCVar ir_FuelUsePerHour;    // float[1] Engine fuel used instantaneous (kg/h)
+extern irsdkCVar ir_Voltage;    // float[1] Engine voltage (V)
 extern irsdkCVar ir_WaterTemp;    // float[1] Engine coolant temp (C)
 extern irsdkCVar ir_WaterLevel;    // float[1] Engine coolant level (l)
 extern irsdkCVar ir_FuelPress;    // float[1] Engine fuel pressure (bar)
-extern irsdkCVar ir_FuelUsePerHour;    // float[1] Engine fuel used instantaneous (kg/h)
 extern irsdkCVar ir_OilTemp;    // float[1] Engine oil temperature (C)
 extern irsdkCVar ir_OilPress;    // float[1] Engine oil pressure (bar)
 extern irsdkCVar ir_OilLevel;    // float[1] Engine oil level (l)
-extern irsdkCVar ir_Voltage;    // float[1] Engine voltage (V)
 extern irsdkCVar ir_ManifoldPress;    // float[1] Engine manifold pressure (bar)
+extern irsdkCVar ir_FuelLevel;    // float[1] Liters of fuel remaining (l)
+extern irsdkCVar ir_Engine0_RPM;    // float[1] Engine0Engine rpm (revs/min)
+extern irsdkCVar ir_RFbrakeLinePress;    // float[1] RF brake line pressure (bar)
 extern irsdkCVar ir_RFcoldPressure;    // float[1] RF tire cold pressure  as set in the garage (kPa)
+extern irsdkCVar ir_RFodometer;    // float[1] RF distance tire traveled since being placed on car (m)
 extern irsdkCVar ir_RFtempCL;    // float[1] RF tire left carcass temperature (C)
 extern irsdkCVar ir_RFtempCM;    // float[1] RF tire middle carcass temperature (C)
 extern irsdkCVar ir_RFtempCR;    // float[1] RF tire right carcass temperature (C)

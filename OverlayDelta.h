@@ -34,6 +34,8 @@ class OverlayDelta : public Overlay
 public:
     OverlayDelta()
         : Overlay("OverlayDelta")
+        , m_currentSectorIdx(-1)
+        , m_sectorStartDelta(0.0f)
     {
     }
 
@@ -46,11 +48,15 @@ protected:
     virtual void onEnable()
     {
         onConfigChanged();
+        m_currentSectorIdx = -1;
+        m_sectorStartDelta = 0.0f;
     }
 
     virtual void onDisable()
     {
         m_text.reset();
+        m_currentSectorIdx = -1;
+        m_sectorStartDelta = 0.0f;
     }
 
     virtual void onConfigChanged()
@@ -106,6 +112,59 @@ protected:
             }
         }
 
+        const float lapDistPct = ir_LapDistPct.getFloat();
+        if (lapDistPct == 0.0f)
+        {
+            m_currentSectorIdx = -1;
+            m_sectorStartDelta = 0.0f;
+		}
+
+		dbg("lapDistPct: %.2f, currentSectorIdx: %d", lapDistPct, m_currentSectorIdx);
+		dbg("sectors size: %d", (int)ir_session.sectors.size());
+
+		int newSectorIdx = -1;
+		for (int i = (int)ir_session.sectors.size() - 1; i >= 0; --i)
+		{
+			dbg("sectors %d percentage: %.4f", i, ir_session.sectors[i].sectorStartPct);
+			if (lapDistPct >= ir_session.sectors[i].sectorStartPct)
+			{
+				newSectorIdx = i;
+				break;
+			}
+		}
+
+        if (newSectorIdx != m_currentSectorIdx && newSectorIdx > -1)
+        {
+            m_currentSectorIdx = newSectorIdx;
+            m_sectorStartDelta = isValid ? delta : 0.0f;
+        }
+
+        float sectorDelta = 0.0f;
+        bool sectorDeltaValid = false;
+        if (m_currentSectorIdx >= 0 && isValid)
+        {
+            sectorDelta = delta - m_sectorStartDelta;
+            sectorDeltaValid = true;
+        }
+
+        float4 sectorTextCol = invalidCol;
+        if (sectorDeltaValid)
+        {
+            const float absSectorDelta = fabsf(sectorDelta);
+
+            if (absSectorDelta <= 0.01f)
+            {
+                sectorTextCol = zeroCol;
+            }
+            else if (absSectorDelta <= 0.02f)
+            {
+                sectorTextCol = sectorDelta < 0 ? lightNegativeCol : lightPositiveCol;
+            }
+            else
+            {
+                sectorTextCol = sectorDelta < 0 ? negativeCol : positiveCol;
+            }
+        }
 
         wchar_t value[64] = {};
 
@@ -116,6 +175,14 @@ protected:
         else
             swprintf(value, _countof(value), L"%+.2f", delta);
 
+        wchar_t sectorValue[64] = {};
+        if (!sectorDeltaValid)
+            swprintf(sectorValue, _countof(sectorValue), L"(-.-)");
+        else if (fabsf(sectorDelta) <= zeroEps)
+            swprintf(sectorValue, _countof(sectorValue), L"(0.0)");
+        else
+            swprintf(sectorValue, _countof(sectorValue), L"(%+.2f)", sectorDelta);
+
         m_renderTarget->BeginDraw();
         m_brush->SetColor(textCol);
         m_text.render(
@@ -123,14 +190,28 @@ protected:
             value,
             m_textFormat.Get(),
             0,
+            (float)m_width * 0.5f,
+            (float)m_height * 0.5f,
+            m_brush.Get(),
+            DWRITE_TEXT_ALIGNMENT_CENTER);
+
+        m_brush->SetColor(sectorTextCol);
+        m_text.render(
+            m_renderTarget.Get(),
+            sectorValue,
+            m_textFormat.Get(),
+            (float)m_width * 0.5f,
             (float)m_width,
             (float)m_height * 0.5f,
             m_brush.Get(),
             DWRITE_TEXT_ALIGNMENT_CENTER);
+
         m_renderTarget->EndDraw();
     }
 
 protected:
     Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormat;
     TextCache m_text;
+    int m_currentSectorIdx;
+    float m_sectorStartDelta;
 };
