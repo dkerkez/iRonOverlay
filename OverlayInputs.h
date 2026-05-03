@@ -89,7 +89,7 @@ protected:
 
 			for (int i = 0; i < (int)m_steerVtx.size() - 1; ++i)
 				m_steerVtx[i].y = m_steerVtx[i + 1].y;
-			m_steerVtx[(int)m_steerVtx.size() - 1].y = std::min(1.0f, std::max(0.0f, (ir_SteeringWheelAngle.getFloat() / ir_SteeringWheelAngleMax.getFloat()) * -0.5f + 0.5f));
+			m_steerVtx[(int)m_steerVtx.size() - 1].y = std::min(0.98f, std::max(0.02f, (ir_SteeringWheelAngle.getFloat() / 3.6f) * -0.5f + 0.5f));
 		}
 
 		const float thickness = g_cfg.getFloat(m_name, "line_thickness", 2.0f);
