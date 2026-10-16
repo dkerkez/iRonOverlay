@@ -54,7 +54,8 @@ enum class Hotkey
     Delta,
     Relative,
     Cover,
-    Telemetry
+    Telemetry,
+    DeltaOverInputs
 };
 
 static void registerHotkeys()
@@ -65,7 +66,8 @@ static void registerHotkeys()
     UnregisterHotKey( NULL, (int)Hotkey::Inputs );
     UnregisterHotKey( NULL, (int)Hotkey::Delta );
     UnregisterHotKey( NULL, (int)Hotkey::Relative );
-    UnregisterHotKey( NULL, (int)Hotkey::Cover );
+    UnregisterHotKey( NULL, (int)Hotkey::Cover);
+    UnregisterHotKey( NULL, (int)Hotkey::DeltaOverInputs );
 
     UINT vk, mod;
 
@@ -92,6 +94,8 @@ static void registerHotkeys()
 
     if( parseHotkey( g_cfg.getString("TelemetryLogger","toggle_hotkey","ctrl-6"),&mod,&vk) )
         RegisterHotKey( NULL, (int)Hotkey::Telemetry, mod, vk );
+    if (parseHotkey( g_cfg.getString("DeltaOverInputs", "toggle_hotkey", "ctrl-7"), &mod, &vk))
+        RegisterHotKey(NULL, (int)Hotkey::DeltaOverInputs, mod, vk);
 }
 
 static void handleConfigChange( std::vector<Overlay*> overlays, ConnectionStatus status )
@@ -143,6 +147,7 @@ int main()
     printf("    Toggle cover overlay:         %s\n", g_cfg.getString("OverlayCover","toggle_hotkey","").c_str() );
     printf("    Toggle delta overlay:         %s\n", g_cfg.getString("OverlayDelta","toggle_hotkey","").c_str() );
     printf("    Toggle telemetry logging:     %s\n", g_cfg.getString("TelemetryLogger","toggle_hotkey","").c_str() );
+    printf("    Toggle delta over inputs:     %s\n", g_cfg.getString("OverlayInputs", "toggle_hotkey", "").c_str());
     printf("\niRon will generate a file called \'config.json\' in its current directory. This file\n"\
            "stores your settings. You can edit the file at any time, even while iRon is running,\n"\
            "to customize your overlays and hotkeys.\n\n");
@@ -279,7 +284,7 @@ int main()
                         g_cfg.setBool( "OverlayInputs", "enabled", !g_cfg.getBool("OverlayInputs","enabled",true) );
                         break;
                     case (int)Hotkey::Delta:
-                        g_cfg.setBool( "OverlayDelta", "enabled", !g_cfg.getBool("OverlayDelta","enabled",true) );
+                        g_cfg.setBool("OverlayDelta", "enabled", !g_cfg.getBool("OverlayDelta", "enabled", true));
                         break;
                     case (int)Hotkey::Relative:
                         g_cfg.setBool( "OverlayRelative", "enabled", !g_cfg.getBool("OverlayRelative","enabled",true) );
@@ -289,6 +294,9 @@ int main()
                         break;
                     case (int)Hotkey::Telemetry:
                         g_cfg.setBool( "TelemetryLogger", "enabled", !g_cfg.getBool("TelemetryLogger","enabled",true) );
+                        break;
+                    case (int)Hotkey::DeltaOverInputs:
+                        g_cfg.setBool("OverlayInputs", "show_delta", !g_cfg.getBool("OverlayInputs", "show_delta", true));
                         break;
                     }
 

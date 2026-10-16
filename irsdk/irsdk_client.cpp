@@ -60,15 +60,17 @@ bool irsdkClient::waitForData(int timeoutMS)
 			// reset session info str status
 			m_lastSessionCt = -1;
 
-			// and try to fill in the data
-			if(irsdk_getNewData(m_data))
-				return true;
-		}
-		else if(m_data)
-		{
-			// else we are allready initialized, and data is ready for processing
-			return true;
-		}
+				// and try to fill in the data
+				if(irsdk_getNewData(m_data))
+					return true;
+			}
+			else if(m_data)
+			{
+				// else we are allready initialized, and data is ready for processing
+				// fetch the new data into our buffer
+				if(irsdk_getNewData(m_data))
+					return true;
+			}
 	}
 	else if(!isConnected())
 	{
